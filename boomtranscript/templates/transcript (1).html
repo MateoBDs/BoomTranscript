@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ transcript.guild.name }} · {{ transcript.channel.name }}</title>
+<style>
+:root{
+--bg:#313338;--panel:#2b2d31;--panel2:#232428;--text:#dbdee1;
+--muted:#949ba4;--line:#3f4147;--accent:#5865f2;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font:15px "gg sans","Segoe UI",system-ui,sans-serif}
+.header{
+background:linear-gradient(180deg,#1d1f22,#2b2d31);
+border-bottom:1px solid var(--line)}
+.banner{height:180px;background:#202225;overflow:hidden}
+.banner img{width:100%;height:100%;object-fit:cover}
+.info{display:flex;gap:20px;padding:24px;align-items:center}
+.server{width:84px;height:84px;border-radius:24px;border:5px solid var(--panel)}
+.server img{width:100%;height:100%;border-radius:19px}
+.meta h1{margin:0;font-size:34px}
+.meta .sub{color:var(--muted);margin-top:4px}
+.stats{display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--muted)}
+.chat{max-width:1100px;margin:auto;padding:24px 0}
+.msg{display:grid;grid-template-columns:56px 1fr;padding:4px 16px}
+.msg:hover{background:#2e3035}
+.avatar{width:40px;height:40px;border-radius:50%}
+.head{display:flex;align-items:baseline;gap:8px}
+.name{font-weight:700}
+.bot{background:var(--accent);color:#fff;border-radius:4px;
+padding:1px 4px;font-size:10px;font-weight:700}
+.time{color:var(--muted);font-size:12px}
+.content{margin-top:2px;line-height:1.45;white-space:pre-wrap}
+.embed{margin-top:8px;background:var(--panel);
+border-left:4px solid var(--accent);
+border-radius:6px;padding:10px 12px;max-width:520px}
+.embed-title{font-weight:700}
+.embed-desc{margin-top:6px;color:#d1d5db}
+.attach{margin-top:8px;padding:10px;border:1px solid var(--line);
+border-radius:8px;background:var(--panel)}
+.reply{display:flex;align-items:center;color:var(--muted);
+font-size:12px;margin-bottom:4px}
+.reactbar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.react{background:#2b2d31;border:1px solid var(--line);
+border-radius:999px;padding:3px 8px;font-size:13px}
+.footer{padding:20px;text-align:center;color:var(--muted)}
+code{background:#1e1f22;padding:2px 4px;border-radius:4px}
+pre{background:#1e1f22;padding:12px;border-radius:8px;overflow:auto}
+</style>
+</head>
+<body>
+
+<header class="header">
+{% if transcript.guild.banner %}
+<div class="banner"><img src="{{ transcript.guild.banner }}"></div>
+{% endif %}
+<div class="info">
+<div class="server">
+{% if transcript.guild.icon %}
+<img src="{{ transcript.guild.icon }}">
+{% endif %}
+</div>
+<div class="meta">
+<h1>{{ transcript.guild.name }}</h1>
+<div class="sub">#{{ transcript.channel.name }}</div>
+<div class="stats">
+<span>{{ transcript.channel.category }}</span>
+<span>{{ transcript.message_count }} mensajes</span>
+<span>{{ transcript.generated_at }}</span>
+</div>
+</div>
+</div>
+</header>
+
+<main class="chat">
+{% for message in transcript.messages %}
+<div class="msg">
+<div>
+<img class="avatar" src="{{ message.author.avatar }}">
+</div>
+<div>
+<div class="head">
+<span class="name" style="color:{{ message.author.color }}">
+{{ message.author.display_name }}
+</span>
+{% if message.author.bot %}
+<span class="bot">BOT</span>
+{% endif %}
+<span class="time">{{ message.created_at }}</span>
+</div>
+
+{% if message.reference %}
+<div class="reply">↪ Respuesta a {{ message.reference.author }}</div>
+{% endif %}
+
+<div class="content">{{ message.content }}</div>
+
+{% for embed in message.embeds %}
+<div class="embed">
+{% if embed.author %}
+<div>{{ embed.author }}</div>
+{% endif %}
+{% if embed.title %}
+<div class="embed-title">{{ embed.title }}</div>
+{% endif %}
+{% if embed.description %}
+<div class="embed-desc">{{ embed.description }}</div>
+{% endif %}
+</div>
+{% endfor %}
+
+{% for file in message.attachments %}
+<div class="attach">
+📎 {{ file.filename }}
+</div>
+{% endfor %}
+
+{% if message.reactions %}
+<div class="reactbar">
+{% for r in message.reactions %}
+<div class="react">{{ r.emoji }} {{ r.count }}</div>
+{% endfor %}
+</div>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</main>
+
+<div class="footer">
+Generado con BoomTranscript
+</div>
+
+</body>
+</html>
