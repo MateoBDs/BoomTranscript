@@ -98,17 +98,102 @@ pre{background:#1e1f22;padding:12px;border-radius:8px;overflow:auto}
 <div class="content">{{ message.content }}</div>
 
 {% for embed in message.embeds %}
-<div class="embed">
-{% if embed.author %}
-<div>{{ embed.author }}</div>
-{% endif %}
-{% if embed.title %}
-<div class="embed-title">{{ embed.title }}</div>
-{% endif %}
-{% if embed.description %}
-<div class="embed-desc">{{ embed.description }}</div>
-{% endif %}
+
+<div class="embed" style="border-left-color: {{ embed.color }}">
+
+    {% if embed.author_name %}
+    <div class="embed-author">
+
+        {% if embed.author_icon %}
+        <img class="embed-author-icon" src="{{ embed.author_icon }}">
+        {% endif %}
+
+        <span>{{ embed.author_name }}</span>
+
+    </div>
+    {% endif %}
+
+    {% if embed.title %}
+    <div class="embed-title">
+        {{ embed.title }}
+    </div>
+    {% endif %}
+
+    {% if embed.description %}
+    <div class="embed-desc">
+        {{ embed.description }}
+    </div>
+    {% endif %}
+
+    {% if embed.fields %}
+
+    <div class="embed-fields">
+
+        {% for field in embed.fields %}
+
+        <div class="embed-field">
+
+            <div class="embed-field-name">
+
+                {{ field.name }}
+
+            </div>
+
+            <div class="embed-field-value">
+
+                {{ field.value }}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+    {% if embed.thumbnail %}
+
+    <img
+        class="embed-thumbnail"
+        src="{{ embed.thumbnail }}"
+    >
+
+    {% endif %}
+
+    {% if embed.image %}
+
+    <img
+        class="embed-image"
+        src="{{ embed.image }}"
+    >
+
+    {% endif %}
+
+    {% if embed.footer %}
+
+    <div class="embed-footer">
+
+        {% if embed.footer_icon %}
+        <img
+            class="embed-footer-icon"
+            src="{{ embed.footer_icon }}"
+        >
+        {% endif %}
+
+        <span>
+
+            {{ embed.footer }}
+
+        </span>
+
+    </div>
+
+    {% endif %}
+
 </div>
+
 {% endfor %}
 
 {% for file in message.attachments %}
