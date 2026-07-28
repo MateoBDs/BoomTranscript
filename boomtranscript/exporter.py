@@ -1,104 +1,84 @@
 from pathlib import Path
+from datetime import datetime
 
 from .renderer import TranscriptRenderer
+from .models import *
 
 
 class TranscriptExporter:
 
     def __init__(self, channel):
         self.channel = channel
+        self.renderer = TranscriptRenderer()
 
-    async def export(self):
+    async def export(self, filename: str | None = None):
 
         guild = self.channel.guild
 
-        messages = []
+        transcript = TranscriptData(
 
-        async for msg in self.channel.history(limit=None, oldest_first=True):
+            guild=GuildData(
+                id=guild.id,
+                name=guild.name,
+                icon=guild.icon.url if guild.icon else None,
+                banner=guild.banner.url if guild.banner else None
+            ),
 
-            member = guild.get_member(msg.author.id)
+            channel=ChannelData(
+                id=self.channel.id,
+                name=self.channel.name,
+                topic=self.channel.topic,
+                category=self.channel.category.name if self.channel.category else None
+            ),
 
-            embeds = []
-            for embed in msg.embeds:
+            generated_at=datetime.utcnow().strftime("%d/%m/%Y %H:%M"),
 
-                embeds.append({
-                    "title": embed.title,
-                    "description": embed.description,
-                    "url": embed.url,
-                    "color": embed.color.value if embed.color else None,
-                    "thumbnail": embed.thumbnail.url if embed.thumbnail else None,
-                    "image": embed.image.url if embed.image else None,
-                    "footer": embed.footer.text if embed.footer else None,
-                    "author": embed.author.name if embed.author else None,
-                })
+            message_count=0,
 
-            attachments = []
-
-            for attachment in msg.attachments:
-                attachments.append({
-                    "filename": attachment.filename,
-                    "url": attachment.url,
-                    "size": attachment.size,
-                    "content_type": attachment.content_type,
-                })
-
-            reactions = []
-
-            for reaction in msg.reactions:
-                reactions.append({
-                    "emoji": str(reaction.emoji),
-                    "count": reaction.count,
-                })
-
-            messages.append({
-
-                "id": msg.id,
-
-                "author": {
-                    "id": msg.author.id,
-                    "username": msg.author.name,
-                    "display_name": member.display_name if member else msg.author.display_name,
-                    "avatar": msg.author.display_avatar.url,
-                    "color": str(member.color) if member else "#ffffff",
-                    "bot": msg.author.bot,
-                },
-
-                "content": msg.content,
-
-                "created_at": msg.created_at,
-
-                "edited_at": msg.edited_at,
-
-                "embeds": embeds,
-
-                "attachments": attachments,
-
-                "stickers": [
-                    {
-                        "name": s.name,
-                        "url": s.url if hasattr(s, "url") else None,
-                    }
-                    for s in msg.stickers
-                ],
-
-                "reactions": reactions,
-
-                "reference": msg.reference.message_id if msg.reference else None,
-            })
-
-        renderer = TranscriptRenderer(
-            guild=guild,
-            channel=self.channel,
-            messages=messages,
+            messages=[]
         )
 
-        html = renderer.render()
+        async for message in self.channel.history(
+            oldest_first=True,
+            limit=None
+        ):
 
-        file = Path(f"transcript-{self.channel.name}.html")
+            transcript.messages.append(
+                MessageData(
 
-        file.write_text(
+                    id=message.id,
+
+                    author=AuthorData(
+                        id=message.author.id,
+                        username=message.author.name,
+                        display_name=message.author.display_name,
+                        avatar=message.author.display_avatar.url,
+                        color=str(message.author.color),
+                        bot=message.author.bot
+                    ),
+
+                    content=message.content,
+
+                    created_at=message.created_at.strftime(
+                        "%d/%m/%Y %H:%M"
+                    ),
+
+                    edited=message.edited_at is not None
+                )
+            )
+
+        transcript.message_count = len(transcript.messages)
+
+        html = self.renderer.render(transcript)
+
+        if filename is None:
+            filename = f"transcript-{self.channel.name}.html"
+
+        path = Path(filename)
+
+        path.write_text(
             html,
             encoding="utf-8"
         )
 
-        return file
+        return path
